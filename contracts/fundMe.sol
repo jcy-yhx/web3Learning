@@ -5,22 +5,26 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 contract FundMe{
     mapping(address => uint256) public fundersToAccount;
 
-    // 转账最低值 10美元
-    uint256 constant MINIUM_VALUE = 10 * 10 ** 18;  
+    // 转账最低值 
+    uint256 constant MINIUM_VALUE = 40 * 10 ** 18;  
 
      // 定义Chainlink的数据源
-    AggregatorV3Interface internal dataFeed;
+    AggregatorV3Interface public dataFeed;
 
     //定义提取fund的值
-    uint constant TARGET = 40 *10**18;
+    uint constant TARGET = 80 *10**18;
 
     //合约所有者
     address public owner;
 
+    event FundWithdrawByOwner(uint256);
     // 构造函数
-    constructor(){
+    constructor(address dataFeedAddr){
         //sepolia testnet ETH / USD
-        dataFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+        // dataFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
+
+        //mock
+        dataFeed = AggregatorV3Interface(dataFeedAddr);
 
         //赋值owner
         owner = msg.sender;
@@ -72,9 +76,12 @@ contract FundMe{
 
         //call
         bool success;
-        (success, ) = payable(msg.sender).call{value:address(this).balance}("");
+        uint256 balance = address(this).balance;
+        (success, ) = payable(msg.sender).call{value:balance}("");
         require(success,"transfer tx falled");
 
+        //emit event
+        emit FundWithdrawByOwner(balance);
         //应该将所有人余额清零
         
     }
